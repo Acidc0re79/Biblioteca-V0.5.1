@@ -1,4 +1,6 @@
 <?php
+// Archivo CORREGIDO Y FINAL: /public/form-handler.php
+
 // 1. Carga la configuración y el entorno de la aplicación.
 require_once __DIR__ . '/../config/init.php';
 
@@ -16,13 +18,14 @@ $allowed_actions = [
     'update_profile'  => ROOT_PATH . '/utils/acciones/perfil/actualizar_perfil.php',
     'crear_password'  => ROOT_PATH . '/utils/acciones/perfil/crear_password.php',
 
-    // ✅ Acciones de Administración
-    'editar_usuario_admin'   => ROOT_PATH . '/utils/acciones/admin/editar_usuario.php',
-    'eliminar_usuario_admin' => ROOT_PATH . '/utils/acciones/admin/eliminar_usuario.php',
+    // Acciones de Administración
+    // ✅ CORRECCIÓN: La clave ahora es 'actualizar_usuario_admin' y apunta al script correcto.
+    'actualizar_usuario_admin'  => ROOT_PATH . '/utils/acciones/admin/actualizar_usuario.php',
+    'eliminar_usuario_admin'    => ROOT_PATH . '/utils/acciones/admin/eliminar_usuario.php',
 	'activar_usuario_admin'     => ROOT_PATH . '/utils/acciones/admin/activar_usuario.php',
-	'resetear_intentos_avatar'      => ROOT_PATH . '/utils/acciones/admin/resetear_intentos_avatar.php',
-	'restringir_avatares'           => ROOT_PATH . '/utils/acciones/admin/restringir_avatares.php',
-    'actualizar_config_ia' => ROOT_PATH . '/utils/acciones/admin/actualizar_config_ia.php',
+	'resetear_intentos_avatar'  => ROOT_PATH . '/utils/acciones/admin/resetear_intentos_avatar.php',
+	'restringir_avatares'       => ROOT_PATH . '/utils/acciones/admin/restringir_avatares.php',
+    'actualizar_config_ia'      => ROOT_PATH . '/utils/acciones/admin/actualizar_config_ia.php',
 	'actualizar_config_general' => ROOT_PATH . '/utils/acciones/admin/actualizar_config_general.php',
 ];
 

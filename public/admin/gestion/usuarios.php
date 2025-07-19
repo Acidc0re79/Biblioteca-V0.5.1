@@ -79,6 +79,7 @@ $page_title = "Gestión de Usuarios";
                             <th>Rango</th>
                             <th>Estado</th>
                             <th>Registrado</th>
+							<th>Intentos A.</th>
                             <th class="actions-cell">Acciones</th>
                         </tr>
                     </thead>
@@ -91,6 +92,7 @@ $page_title = "Gestión de Usuarios";
                                 <td><?= ucfirst(htmlspecialchars($usuario['rango'])) ?></td>
                                 <td><?= ucfirst(htmlspecialchars($usuario['estado_cuenta'])) ?></td>
                                 <td><?= date('d/m/Y', strtotime($usuario['fecha_registro'])) ?></td>
+								<td><?= ucfirst(htmlspecialchars($usuario['intentos_avatar'])) ?></td>
                                 <td class="actions-cell">
                                     <?php if ($usuario['estado_cuenta'] === 'pendiente'): ?>
                                         <form action="<?= BASE_URL ?>form-handler.php" method="POST" title="Activar Cuenta">

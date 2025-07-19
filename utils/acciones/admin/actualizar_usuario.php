@@ -1,9 +1,10 @@
 <?php
+// Archivo REFORZADO Y FINAL: /utils/acciones/admin/actualizar_usuario.php
+
 // Se asume que el form-handler ha iniciado el entorno con init.php
 
 // --- Seguridad: Verificación de Permisos ---
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['rango'], ['administrador', 'moderador'])) {
-    // Si se accede directamente o sin permisos, se redirige.
     header('Location: ' . BASE_URL);
     exit;
 }
@@ -22,7 +23,6 @@ $password = $_POST['password'] ?? '';
 $puntos = filter_input(INPUT_POST, 'puntos', FILTER_VALIDATE_INT);
 $intentos_avatar = filter_input(INPUT_POST, 'intentos_avatar', FILTER_VALIDATE_INT);
 
-// Verificación de que el usuario a editar existe
 if (!$id_usuario_a_editar) {
     $_SESSION['error_message'] = "ID de usuario inválido.";
     header('Location: ' . BASE_URL . 'admin/gestion/usuarios.php');
@@ -43,11 +43,11 @@ $parametros[':puntos'] = $puntos;
 $campos_a_actualizar[] = "intentos_avatar = :intentos_avatar";
 $parametros[':intentos_avatar'] = $intentos_avatar;
 
-// RBAC: Rango (Moderador no puede ascender a Admin)
+// RBAC: Rango (Moderador no puede ascender a Admin o modificar a otro Admin)
 if ($_SESSION['rango'] === 'administrador') {
     $campos_a_actualizar[] = "rango = :rango";
     $parametros[':rango'] = $rango;
-} elseif ($rango !== 'administrador') { // Un moderador puede cambiar a otros rangos, pero no a admin
+} elseif ($rango !== 'administrador') { 
     $campos_a_actualizar[] = "rango = :rango";
     $parametros[':rango'] = $rango;
 }
@@ -74,7 +74,6 @@ if (!empty($password)) {
     $parametros[':salt'] = $salt;
 }
 
-// Parámetro final para la cláusula WHERE
 $parametros[':id_usuario'] = $id_usuario_a_editar;
 
 try {
@@ -85,25 +84,20 @@ try {
         throw new Exception("El nickname elegido ya está en uso por otro usuario.");
     }
     
-    // Construimos y ejecutamos la consulta final
     $sql = "UPDATE usuarios SET " . implode(', ', $campos_a_actualizar) . " WHERE id_usuario = :id_usuario";
     $stmt_update = $pdo->prepare($sql);
     
     if ($stmt_update->execute($parametros)) {
-        log_system_event("Perfil de usuario actualizado desde el panel.", [
-            'admin_id' => $_SESSION['user_id'],
-            'usuario_editado_id' => $id_usuario_a_editar
-        ]);
+        log_system_event("Perfil de usuario actualizado desde panel.", ['admin_id' => $_SESSION['user_id'], 'usuario_editado_id' => $id_usuario_a_editar]);
         $_SESSION['success_message'] = "Usuario actualizado correctamente.";
     } else {
         $_SESSION['error_message'] = "No se pudo actualizar el usuario.";
     }
 
 } catch (Exception $e) {
-    log_system_event("Error al actualizar usuario desde el panel.", ['error' => $e->getMessage()]);
+    log_system_event("Error al actualizar usuario desde panel.", ['error' => $e->getMessage()]);
     $_SESSION['error_message'] = $e->getMessage();
 }
 
-// Redirigimos de vuelta a la página de edición
 header('Location: ' . BASE_URL . 'admin/gestion/editar_usuario.php?id=' . $id_usuario_a_editar);
 exit;

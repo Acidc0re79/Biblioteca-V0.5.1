@@ -1,34 +1,39 @@
 <?php
-// Se asume que el form-handler ya ha verificado que el usuario es admin/mod.
+// Se asume que form-handler.php ya cargó init.php
 
-if (!isset($_POST['id_usuario']) || empty($_POST['id_usuario'])) {
-    $_SESSION['error_message'] = "No se proporcionó un ID de usuario para resetear los intentos.";
+// --- Seguridad y Permisos ---
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['rango'], ['administrador', 'moderador'])) {
+    header('Location: ' . BASE_URL);
+    exit;
+}
+
+// --- Validación de Entradas ---
+$id_usuario = filter_input(INPUT_POST, 'id_usuario', FILTER_VALIDATE_INT);
+$return_url = filter_input(INPUT_POST, 'return_url', FILTER_SANITIZE_URL);
+
+if (!$id_usuario) {
+    $_SESSION['error_message'] = "ID de usuario inválido.";
     header('Location: ' . BASE_URL . 'admin/gestion/usuarios.php');
     exit;
 }
 
-$id_usuario_a_resetear = filter_input(INPUT_POST, 'id_usuario', FILTER_VALIDATE_INT);
-
+// --- Lógica de la Base de Datos ---
 try {
-    // Ponemos el contador de intentos de avatar a 0 para el usuario especificado.
     $stmt = $pdo->prepare("UPDATE usuarios SET intentos_avatar = 0 WHERE id_usuario = ?");
-    
-    if ($stmt->execute([$id_usuario_a_resetear])) {
-        log_system_event("Intentos de avatar reseteados desde el panel.", [
-            'admin_id' => $_SESSION['user_id'],
-            'usuario_afectado_id' => $id_usuario_a_resetear
-        ]);
-        $_SESSION['success_message'] = "Los intentos de generación de avatares para el usuario han sido reseteados a 0.";
-    } else {
-        $_SESSION['error_message'] = "No se pudieron resetear los intentos del usuario.";
-    }
-
+    $stmt->execute([$id_usuario]);
+    $_SESSION['success_message'] = "Intentos de avatar reseteados correctamente.";
 } catch (PDOException $e) {
-    log_system_event("Excepción de BD al resetear intentos de avatar.", ['error_message' => $e->getMessage()]);
-    $_SESSION['error_message'] = "Error de base de datos.";
+    $_SESSION['error_message'] = "Error al resetear los intentos.";
+    log_system_event("Error reseteando intentos de avatar", ['error' => $e->getMessage()]);
 }
 
-// Redirigimos de vuelta a la lista de usuarios, manteniendo los filtros activos.
-$redirect_url = BASE_URL . 'admin/gestion/usuarios.php?' . http_build_query($_GET);
-header('Location: ' . $redirect_url);
+// --- Redirección Inteligente ---
+$redirect_location = BASE_URL . 'admin/gestion/usuarios.php'; // Destino por defecto
+
+// Si se proveyó una URL de retorno y es una URL local segura...
+if ($return_url && strpos($return_url, '/') === 0) {
+    $redirect_location = $return_url; // ...la usamos.
+}
+
+header('Location: ' . $redirect_location);
 exit;
